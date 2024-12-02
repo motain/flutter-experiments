@@ -28,6 +28,9 @@
   "dependencies": {
     "Flutter": [
 
+    ],
+    "freezer_plugin": [
+
     ]
   }
 }

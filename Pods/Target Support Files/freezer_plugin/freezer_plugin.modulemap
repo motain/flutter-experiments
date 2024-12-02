@@ -1,0 +1,6 @@
+framework module freezer_plugin {
+  umbrella header "freezer_plugin-umbrella.h"
+
+  export *
+  module * { export * }
+}

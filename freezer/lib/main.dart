@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 
 Future<void> main() async {
@@ -33,12 +34,20 @@ class WrapperModule extends Module {
           '/profile',
           child: (context, args) => Scaffold(
               body: SingleChildScrollView(
-            child: Column(
-              children: List<Widget>.generate(
+            child: Column(children: [
+              SizedBox(
+                width: 100,
+                height: 50,
+                child: UiKitView(
+                  viewType: "freezer",
+                  creationParamsCodec: StandardMessageCodec(),
+                ),
+              ),
+              ...List<Widget>.generate(
                 1000,
                 (index) => Text('this is profile dummy text index $index'),
               ),
-            ),
+            ]),
           )),
         )
       ];
