@@ -13,10 +13,20 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-        // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
-        // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
-        // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
-        guard let _ = (scene as? UIWindowScene) else { return }
+        guard let scene = (scene as? UIWindowScene) else { return }
+        let window = UIWindow(windowScene: scene)
+        let tabBar = UITabBarController()
+        window.rootViewController = tabBar
+        
+        
+        tabBar.viewControllers = [
+            DummyViewController("A"),
+            DummyViewController("B"),
+        ]
+        
+        window.makeKeyAndVisible()
+        self.window = window
+        
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
@@ -50,3 +60,32 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 }
 
+
+final class DummyViewController: UIViewController {
+    private let string: String
+
+    init(_ string: String) {
+        self.string = string
+        super.init(nibName: nil, bundle: nil)
+        
+        tabBarItem = UITabBarItem(title: string, image: nil, tag: string.hashValue)
+    }
+    
+    override func viewDidLoad() {
+        let label = UILabel()
+        
+        label.text = string
+        view.addSubview(label)
+        
+        label.translatesAutoresizingMaskIntoConstraints = false
+        
+        label.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        label.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        label.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        label.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
