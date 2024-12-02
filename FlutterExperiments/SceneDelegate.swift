@@ -6,22 +6,24 @@
 //
 
 import UIKit
+import Flutter
+import FlutterPluginRegistrant
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
-
+    
+    let engines = FlutterEngineGroup(name: "multiple-flutters", project: nil)
+    
     var window: UIWindow?
-
-
+    
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let scene = (scene as? UIWindowScene) else { return }
         let window = UIWindow(windowScene: scene)
         let tabBar = UITabBarController()
         window.rootViewController = tabBar
         
-        
         tabBar.viewControllers = [
-            DummyViewController("A"),
-            DummyViewController("B"),
+            SingleFlutterViewController(withRoute: "/home", withEngineGroup: engines),
+            SingleFlutterViewController(withRoute: "/profile", withEngineGroup: engines),
         ]
         
         window.makeKeyAndVisible()
@@ -88,4 +90,30 @@ final class DummyViewController: UIViewController {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+}
+
+class SingleFlutterViewController: FlutterViewController {
+  private var channel: FlutterMethodChannel?
+
+    init(withRoute initialRoute: String, withEngineGroup engineGroup: FlutterEngineGroup) {
+    let newEngine = engineGroup.makeEngine(withEntrypoint: nil, libraryURI: nil, initialRoute: initialRoute)
+    GeneratedPluginRegistrant.register(with: newEngine)
+    super.init(engine: newEngine, nibName: nil, bundle: nil)
+    
+    tabBarItem = UITabBarItem(title: initialRoute, image: nil, tag: initialRoute.hashValue)
+  }
+
+  required init(coder aDecoder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
+
+  func onCountUpdate(newCount: Int64) {
+    if let channel = channel {
+      channel.invokeMethod("setCount", arguments: newCount)
+    }
+  }
+
+  override func viewDidLoad() {
+    super.viewDidLoad()
+  }
 }
