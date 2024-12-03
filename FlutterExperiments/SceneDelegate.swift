@@ -17,6 +17,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let scene = (scene as? UIWindowScene) else { return }
+        UIViewController.swizzle()
+        FlutterEngine.swizzle()
+        FlutterMethodChannel.swizzle()
+        FlutterBasicMessageChannel.swizzle()
+
         let window = UIWindow(windowScene: scene)
         let tabBar = UITabBarController()
         window.rootViewController = tabBar
@@ -179,5 +184,98 @@ class FLNativeView: NSObject, FlutterPlatformView {
         nativeLabel.textAlignment = .center
         nativeLabel.frame = CGRect(x: 0, y: 0, width: 180, height: 48.0)
         _view.addSubview(nativeLabel)
+    }
+}
+
+
+extension UIViewController {
+    @objc func trackedViewDidLoad() {
+        print("Tracked this screen:----- \(type(of: self))")
+        trackedViewDidLoad()
+    }
+    static func swizzle() {
+        let originalSelector = #selector(Self.viewDidLoad)
+        let swizzledSelector = #selector(Self.trackedViewDidLoad)
+        let originalMethod = class_getInstanceMethod(self, originalSelector)
+        let swizzledMethod = class_getInstanceMethod(self, swizzledSelector)
+        method_exchangeImplementations(originalMethod!, swizzledMethod!)
+    }
+}
+
+extension FlutterEngine {
+    @objc func tracked_destroyContext() {
+        print("destroyContext | Tracked: \(type(of: self))")
+        tracked_destroyContext()
+    }
+    
+    static func swizzle() {
+        trackDestroyContext(originalSelector: #selector(destroyContext),
+                            swizzledSelector: #selector(FlutterEngine.tracked_destroyContext))
+
+        trackDestroyContext(originalSelector: #selector(FlutterEngine.destroyContext),
+                            swizzledSelector: #selector(FlutterEngine.tracked_destroyContext))
+    }
+
+    static func trackDestroyContext(originalSelector: Selector, swizzledSelector: Selector) {
+        let originalMethod = class_getInstanceMethod(FlutterEngine.self, originalSelector)
+        let swizzledMethod = class_getInstanceMethod(FlutterEngine.self, swizzledSelector)
+        method_exchangeImplementations(originalMethod!, swizzledMethod!)
+    }
+
+}
+
+extension FlutterMethodChannel {
+    @objc func tracked_invokerMethod(_ x: String, _ args: Any?) {
+        print("invokerMethod | Tracked: \(type(of: self))", x, args)
+        tracked_invokerMethod(x, args)
+    }
+
+    @objc func tracked_invokerMethodWithResult(_ x: String, _ args: Any?,_ result: FlutterResult?) {
+        print("invokerMethodResult | Tracked: \(type(of: self))", x, args, result)
+        tracked_invokerMethodWithResult(x, args, result)
+    }
+
+    static func swizzle() {
+        trackDestroyContext(originalSelector: #selector(invokeMethod(_:arguments:)),
+                            swizzledSelector: #selector(tracked_invokerMethod))
+
+        trackDestroyContext(originalSelector: #selector(invokeMethod(_:arguments:result:)),
+                            swizzledSelector: #selector(tracked_invokerMethodWithResult))
+
+        trackDestroyContext(originalSelector: #selector(invokeMethod(_:arguments:result:)),
+                            swizzledSelector: #selector(tracked_invokerMethodWithResult))
+    }
+
+    static func trackDestroyContext(originalSelector: Selector, swizzledSelector: Selector) {
+        let originalMethod = class_getInstanceMethod(Self.self, originalSelector)
+        let swizzledMethod = class_getInstanceMethod(Self.self, swizzledSelector)
+        method_exchangeImplementations(originalMethod!, swizzledMethod!)
+    }
+
+}
+
+extension FlutterBasicMessageChannel {
+    @objc func tracked_sendNoReply(_ message: Any?) {
+        print("send message | Tracked: \(type(of: self))", message)
+        tracked_sendNoReply(message)
+    }
+    
+    @objc func tracked_send(_ message: Any?, _ reply: FlutterReply?) {
+        print("send message with reply | Tracked: \(type(of: self))", message, reply)
+        tracked_send(message, reply)
+    }
+
+    static func swizzle() {
+        trackDestroyContext(originalSelector: #selector(sendMessage(_:)),
+                            swizzledSelector: #selector(tracked_sendNoReply))
+
+        trackDestroyContext(originalSelector: #selector(sendMessage(_:reply:)),
+                            swizzledSelector: #selector(tracked_send))
+    }
+    
+    static func trackDestroyContext(originalSelector: Selector, swizzledSelector: Selector) {
+        let originalMethod = class_getInstanceMethod(Self.self, originalSelector)
+        let swizzledMethod = class_getInstanceMethod(Self.self, swizzledSelector)
+        method_exchangeImplementations(originalMethod!, swizzledMethod!)
     }
 }
